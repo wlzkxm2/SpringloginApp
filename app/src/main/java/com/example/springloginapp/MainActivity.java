@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -43,6 +44,10 @@ import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.spec.SecretKeySpec;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -52,26 +57,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public userDao userdao;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-// storage permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                    || checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                if(shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    Toast.makeText(this, "외부 저장소 사용을 위해 읽기/쓰기 필요", Toast.LENGTH_SHORT).show();
-                }
-
-                requestPermissions(new String[]
-                        {Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE}, 2);
-            }
-        }
-
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MODE_PRIVATE);
 
         userAbs db = Room.databaseBuilder(getApplicationContext(),
                 userAbs.class, "user")
@@ -212,47 +203,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void BackUpDB(Context context){
-        String inputPath = "/data/user/0/com.example.springloginapp/databases/";     // 원본 파일 경로
+//        String inputPath = "/data/user/0/com.example.springloginapp/databases/";     // 원본 파일 경로
         String inputFile = "user";          // 월본 파일이름
-        String outputPath = "/storage/emulated/0/backup";       // 옮길 파일 경로
+//        String outputPath = "/storage/emulated/0/backup";       // 옮길 파일 경로
 
-        InputStream in = null;
-        OutputStream out = null;
+//        InputStream in = null;
+//        OutputStream out = null;
 
-        try{
-            File dir = new File(outputPath);
-            Log.e("db", "dir : " + dir.getPath());
-
-            if(!dir.exists()){
-                dir.mkdir();
+        try {
+            String appName = context.getResources().getString(R.string.app_name);
+            File file = new File(Environment.getExternalStorageDirectory() + "/" + appName + "/");
+            if(!file.exists())
+            {
+                file.mkdirs();
             }
 
-            Log.e("db", outputPath + "/" + inputFile + "_____" + dir.getPath());
+            File sd = Environment.getExternalStorageDirectory();
 
-            in = new FileInputStream(inputPath + inputFile);
-            out = new FileOutputStream(outputPath + "/" + inputFile);
+            if (sd.canWrite())
+            {
+                File data = Environment.getDataDirectory();
+                String currentDBPath= "//data//" + context.getPackageName() + "//databases//" + inputFile;
+                String backupDBPath  = "/" + appName + "/" + inputFile;
+                File currentDB = new File(data, currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
 
-            byte[] buffer = new byte[1024];
-            int read;
+                FileInputStream src = new FileInputStream(currentDB);
+                FileOutputStream dst = new FileOutputStream(backupDB);
 
-            while((read = in.read(buffer)) != -1){
-                out.write(buffer, 0, read);
+                // KEY Length 16 byte
+                SecretKeySpec sks = new SecretKeySpec("1234567890123456".getBytes(), "AES");
+                // Create cipher
+                Cipher cipher = Cipher.getInstance("AES");
+                cipher.init(Cipher.ENCRYPT_MODE, sks);
+
+                CipherOutputStream cos = new CipherOutputStream(dst, cipher);
+                byte[] b = new byte[8];
+                int i = src.read(b);
+                while (i != -1) {
+                    cos.write(b, 0, i);
+                    i = src.read(b);
+                }
+                src.close();
+                dst.close();
+                cos.flush();
+                cos.close();
+
+                Log.e("db", "Database has been exported to\n" + backupDB.toString());
             }
-
-            in.close();
-            in = null;
-
-            out.flush();
-            out.close();
-            out = null;
-
-            new File(inputPath + inputFile).delete();
-
-            File tmp_file = new File(outputPath + "/" + inputFile);
-            context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(tmp_file)));
-
-        } catch(Exception e){
+            else
+            {
+                Log.e("db", "No storage permission.");
+            }
+        } catch (Exception e) {
             e.printStackTrace();
+            Log.e("db", "Error exporting database!");
         }
     }
 
