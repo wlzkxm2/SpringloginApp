@@ -38,10 +38,4 @@ public interface userDao {
     @Delete
     void delete(userEntity user);
 
-
-    @RawQuery
-    @NotNull
-    int checkpoint(SupportSQLiteQuery supportSQLiteQuery);
-
-//    RoomDatabase getDatabase(MainActivity mainActivity);
 }

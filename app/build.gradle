@@ -70,5 +70,8 @@ dependencies {
     //noinspection GradleCompatible
     implementation 'com.android.support:design:28.0.0'
 
+    // db 백업을 위한 그래들
+    implementation 'com.github.salehyarahmadi:RoomDatabaseBackupAndRestore:v1.0.1'
+
 
 }

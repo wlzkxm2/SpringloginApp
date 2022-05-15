@@ -26,7 +26,6 @@ import android.widget.Toast;
 import com.example.springloginapp.db.userAbs;
 import com.example.springloginapp.db.userDao;
 import com.example.springloginapp.db.userEntity;
-import com.example.springloginapp.dbmanagement.CSVWriter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,13 +47,16 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.spec.SecretKeySpec;
 
+import ir.androidexception.roomdatabasebackupandrestore.Backup;
+import ir.androidexception.roomdatabasebackupandrestore.Restore;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     EditText id, pw;
     Button login_, register_, backup_, restore_;
 
-    public userDao userdao;
+    private userAbs database;
 
 
     @Override
@@ -62,32 +64,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MODE_PRIVATE);
-
-        userAbs db = Room.databaseBuilder(getApplicationContext(),
+        database = Room.databaseBuilder(getApplicationContext(),
                 userAbs.class, "user")
-                .setJournalMode(userAbs.JournalMode.TRUNCATE)       // DB 백업을 위해 저널모드로 생성
-                                                                    // https://androidexplained.github.io/android/room/2020/10/03/room-backup-restore.html
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
 
-        userdao = db.userdao();
 
-        userdao.checkpoint((new SimpleSQLiteQuery("pragma wal_checkpoint(full)")));
-
-        List<userEntity> users = userdao.getAll();
-
-
-        if(users.isEmpty() == false) {
-            Log.v("db", "비어있음");
-        }else{
-            userEntity userentity = new userEntity();
-            userentity.setUid(1);
-            userentity.setFirstName("Lee");
-            userentity.setLastName("jiwon");
-            userdao.insertAll(userentity);
-        }
+        database.userdao().insertAll(new userEntity("lee", "jiwon"));
 
         id = (EditText) findViewById(R.id.id_edit);
         pw = (EditText) findViewById(R.id.pw_edit);
@@ -203,48 +187,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void BackUpDB(Context context){
-        String inputPath = "//data//user//0//com.example.springloginapp//databases//";     // 원본 파일 경로
-        String inputFile = "user";          // 월본 파일이름
-        String outputPath = "//storage//emulated//0//backup//";       // 옮길 파일 경로
-        String o = "//storage//emulated//0//backup//user.db";
-        InputStream in = null;
-        OutputStream out = null;
-        try{
-            File dir = new File(outputPath);
-            Log.e("dir", dir.getPath());
-            if(!dir.exists()){
-                dir.mkdirs();
-            }
-
-            Log.e("MOVE_FILE", outputPath + "/" + inputFile + "______" + dir.getPath());
-
-            in = new FileInputStream(inputPath + inputFile);
-            out = new FileOutputStream(outputPath + inputFile);
-
-            byte[] buffer = new byte[1024];
-            int read;
-            while((read = in.read(buffer)) != -1){
-                out.write(buffer, 0, read);
-            }
-            in.close();
-            in = null;
-
-            out.flush();
-            out.close();
-            out = null;
-
-            // 기존 원본파일 삭제
-            new File(inputPath + inputFile).delete();
-
-            // 파일 미디어 동기화 , 사진 혹은 동영상 파일 갤러리 동기화
-            File tmp_file = new File(outputPath + "/" + inputFile);
-            context.sendBroadcast(new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(tmp_file)) );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        new Backup.Init()
+                .database(database)
+                .path(getFilesDir().getPath())
+                .fileName("calDB.txt")
+                .secretKey("SalehYarahmadi")
+                .onWorkFinishListener((success, message) -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show())
+                .execute();
     }
 
-    public static void RestoreDB(){
+    public void RestoreDB(){
+        new Restore.Init()
+                .database(database)
+                .backupFilePath(getFilesDir() + File.separator + "calDB.txt")
+                .secretKey("SalehYarahmadi")
+                .onWorkFinishListener((success, message) -> {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                })
+                .execute();
 
     }
 }

@@ -10,7 +10,7 @@ import com.example.springloginapp.MainActivity;
 
 @Entity
 public class userEntity {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     public int uid;
 
     @ColumnInfo(name = "first_name")
@@ -18,6 +18,11 @@ public class userEntity {
 
     @ColumnInfo(name = "last_name")
     public String lastName;
+
+    public userEntity(String firstName, String lastName){
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
 
     public int getUid() {
         return uid;
