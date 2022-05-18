@@ -1,60 +1,31 @@
 package com.example.springloginapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.room.Room;
-import androidx.room.RoomDatabase;
-import androidx.sqlite.db.SimpleSQLiteQuery;
-
-import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.example.springloginapp.db.userAbs;
-import com.example.springloginapp.db.userDao;
 import com.example.springloginapp.db.userEntity;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.channels.FileChannel;
-import java.util.List;
-
-import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.spec.SecretKeySpec;
-
-import ir.androidexception.roomdatabasebackupandrestore.Backup;
-import ir.androidexception.roomdatabasebackupandrestore.Restore;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     EditText id, pw;
-    Button login_, register_, backup_, restore_;
+    Button login_, register_;
 
     private userAbs database;
 
@@ -77,14 +48,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pw = (EditText) findViewById(R.id.pw_edit);
         login_ = (Button) findViewById(R.id.login_btn);
         register_ = (Button) findViewById(R.id.register_btn);
-        backup_ = (Button) findViewById(R.id.Backup_btn);
-        restore_ = (Button) findViewById(R.id.Restore_btn);
 
 
         login_.setOnClickListener(this);
         register_.setOnClickListener(this);
-        backup_.setOnClickListener(this);
-        restore_.setOnClickListener(this);
 
 
 
@@ -104,13 +71,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 finish();
                 break;
 
-            case R.id.Backup_btn:
-                BackUpDB(this);
-                break;
-
-            case R.id.Restore_btn:
-                RestoreDB();
-                break;
         }
     }
 
@@ -133,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.w("찾은 값 : ", findresults);
 
             Intent intent2 = new Intent(MainActivity.this, login.class);
+            intent2.putExtra("idOutPut", userid);
             startActivity(intent2);
             finish();
 
@@ -151,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 String str;
                 URL url = new URL("http://210.103.48.199:80/android");
+//                URL url = new URL("http://118.235.12.28:80/android");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 conn.setRequestMethod("POST");                              //데이터를 POST 방식으로 전송합니다.
@@ -185,26 +147,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return receiveMsg;
         }
     }
-
-    public void BackUpDB(Context context){
-        new Backup.Init()
-                .database(database)
-                .path(getFilesDir().getPath())
-                .fileName("calDB.txt")
-                .secretKey("SalehYarahmadi")
-                .onWorkFinishListener((success, message) -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show())
-                .execute();
-    }
-
-    public void RestoreDB(){
-        new Restore.Init()
-                .database(database)
-                .backupFilePath(getFilesDir() + File.separator + "calDB.txt")
-                .secretKey("SalehYarahmadi")
-                .onWorkFinishListener((success, message) -> {
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-                })
-                .execute();
-
-    }
+//
+//    public void BackUpDB(Context context){
+//        new Backup.Init()
+//                .database(database)
+//                .path(getFilesDir().getPath())
+//                .fileName("calDB.txt")
+//                .secretKey("SalehYarahmadi")
+//                .onWorkFinishListener((success, message) -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show())
+//                .execute();
+//    }
+//
+//    public void RestoreDB(){
+//        new Restore.Init()
+//                .database(database)
+//                .backupFilePath(getFilesDir() + File.separator + "calDB.txt")
+//                .secretKey("SalehYarahmadi")
+//                .onWorkFinishListener((success, message) -> {
+//                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+//                })
+//                .execute();
+//
+//    }
 }

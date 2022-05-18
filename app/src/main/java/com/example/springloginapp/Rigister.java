@@ -75,6 +75,8 @@ public class Rigister extends Activity implements View.OnClickListener {
             try {
                 String str;
                 URL url = new URL("http://210.103.48.199:80/andrigister");
+
+//                URL url = new URL("http://118.235.12.28:80/andrigister");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 conn.setRequestMethod("POST");
