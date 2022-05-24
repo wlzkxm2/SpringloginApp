@@ -74,7 +74,7 @@ public class Rigister extends Activity implements View.OnClickListener {
         protected String doInBackground(String... strings) {
             try {
                 String str;
-                URL url = new URL("http://210.103.48.199:80/andrigister");
+                URL url = new URL("http://210.103.48.199:3306/andrigister");
 
 //                URL url = new URL("http://118.235.12.28:80/andrigister");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();

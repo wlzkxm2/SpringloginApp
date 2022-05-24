@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
 
                 String str;
-                URL url = new URL("http://210.103.48.199:80/android");
+                URL url = new URL("http://210.103.48.199:3306/android");
 //                URL url = new URL("http://118.235.12.28:80/android");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
